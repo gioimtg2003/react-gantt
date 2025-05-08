@@ -55,7 +55,7 @@ export namespace Gantt {
     task: Item<RecordType>;
     record: Record<RecordType>;
     loading: boolean;
-    _group?: boolean;
+    _group?: string;
     _collapsed: boolean;
     _depth: number;
     _index?: number;
@@ -69,7 +69,7 @@ export namespace Gantt {
     endDate: string | null;
     content: string;
     collapsed: boolean;
-    group?: boolean;
+    group?: string; // Improve
     children?: Item<RecordType>[];
     _parent?: Item<RecordType>;
     _bar?: Bar<RecordType>;
@@ -78,7 +78,7 @@ export namespace Gantt {
   }
 
   export type Record<RecordType = DefaultRecordType> = RecordType & {
-    group?: boolean;
+    group?: string;
     borderColor?: string;
     backgroundColor?: string;
     collapsed?: boolean;

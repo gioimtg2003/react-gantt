@@ -31,6 +31,7 @@ const App = () => (
         backgroundColor: 'red',
         borderColor: 'yellow',
       })}
+      group
       renderBar={(barInfo, { width, height }) => (
         <div style={{ width, height, backgroundColor: 'red' }}>
           renderBar{barInfo.label}

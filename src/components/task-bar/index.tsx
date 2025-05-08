@@ -1,17 +1,17 @@
-import { usePersistFn } from 'ahooks'
-import classNames from 'classnames'
-import dayjs from 'dayjs'
-import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useMemo } from 'react'
-import { TOP_PADDING } from '../../constants'
-import Context from '../../context'
-import { ONE_DAY_MS } from '../../store'
-import { Gantt } from '../../types'
-import DragResize from '../drag-resize'
-import './index.less'
+import { usePersistFn } from 'ahooks';
+import classNames from 'classnames';
+import dayjs from 'dayjs';
+import { observer } from 'mobx-react-lite';
+import React, { useCallback, useContext, useMemo } from 'react';
+import { TOP_PADDING } from '../../constants';
+import Context from '../../context';
+import { ONE_DAY_MS } from '../../store';
+import { Gantt } from '../../types';
+import DragResize from '../drag-resize';
+import './index.less';
 
 interface TaskBarProps {
-  data: Gantt.Bar
+  data: Gantt.Bar;
 }
 
 const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
@@ -25,7 +25,7 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
     alwaysShowTaskBar,
     renderLeftText,
     renderRightText,
-  } = useContext(Context)
+  } = useContext(Context);
   const {
     width,
     translateX,
@@ -36,89 +36,102 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
     record,
     loading,
     getDateWidth,
-  } = data
+  } = data;
+  console.log('barHeight ', barHeight);
+  const { disabled = false } = record || {};
 
-  const { disabled = false } = record || {}
+  const prefixClsTaskBar = `${prefixCls}-task-bar`;
 
-  const prefixClsTaskBar = `${prefixCls}-task-bar`
-
-  const { selectionIndicatorTop, showSelectionIndicator, rowHeight, locale } = store
+  const { selectionIndicatorTop, showSelectionIndicator, rowHeight, locale } =
+    store;
 
   const showDragBar = useMemo(() => {
-    if (!showSelectionIndicator) return false
+    if (!showSelectionIndicator) return false;
     // 差值
-    const baseTop = TOP_PADDING + rowHeight / 2 - barHeight / 2
-    return selectionIndicatorTop === translateY - baseTop
-  }, [showSelectionIndicator, selectionIndicatorTop, translateY, rowHeight, barHeight])
+    const baseTop = TOP_PADDING + rowHeight / 2 - barHeight / 2;
+    return selectionIndicatorTop === translateY - baseTop;
+  }, [
+    showSelectionIndicator,
+    selectionIndicatorTop,
+    translateY,
+    rowHeight,
+    barHeight,
+  ]);
 
   const themeColor = useMemo(() => {
-    if (translateX + width >= dayjs().valueOf() / store.pxUnitAmp) return ['#95DDFF', '#64C7FE']
-    return ['#FD998F', '#F96B5D']
-  }, [store.pxUnitAmp, translateX, width])
+    if (translateX + width >= dayjs().valueOf() / store.pxUnitAmp)
+      return ['#95DDFF', '#64C7FE'];
+    return ['#FD998F', '#F96B5D'];
+  }, [store.pxUnitAmp, translateX, width]);
 
   const handleBeforeResize = (type: Gantt.MoveType) => () => {
-    if (disabled) return
-    store.handleDragStart(data, type)
-  }
+    if (disabled) return;
+    store.handleDragStart(data, type);
+  };
   const handleResize = useCallback(
     ({ width: newWidth, x }) => {
-      if (disabled) return
-      store.updateBarSize(data, { width: newWidth, x })
+      if (disabled) return;
+      store.updateBarSize(data, { width: newWidth, x });
     },
-    [data, store, disabled]
-  )
+    [data, store, disabled],
+  );
   const handleLeftResizeEnd = useCallback(
     (oldSize: { width: number; x: number }) => {
-      store.handleDragEnd()
-      store.updateTaskDate(data, oldSize, 'left')
+      store.handleDragEnd();
+      store.updateTaskDate(data, oldSize, 'left');
     },
-    [data, store]
-  )
+    [data, store],
+  );
   const handleRightResizeEnd = useCallback(
     (oldSize: { width: number; x: number }) => {
-      store.handleDragEnd()
-      store.updateTaskDate(data, oldSize, 'right')
+      store.handleDragEnd();
+      store.updateTaskDate(data, oldSize, 'right');
     },
-    [data, store]
-  )
+    [data, store],
+  );
 
   const handleMoveEnd = useCallback(
     (oldSize: { width: number; x: number }) => {
-      store.handleDragEnd()
-      store.updateTaskDate(data, oldSize, 'move')
+      store.handleDragEnd();
+      store.updateTaskDate(data, oldSize, 'move');
     },
-    [data, store]
-  )
+    [data, store],
+  );
   const handleAutoScroll = useCallback(
     (delta: number) => {
-      store.setTranslateX(store.translateX + delta)
+      store.setTranslateX(store.translateX + delta);
     },
-    [store]
-  )
-  const allowDrag = showDragBar && !loading
+    [store],
+  );
+  const allowDrag = showDragBar && !loading;
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      e.stopPropagation()
-      if (onBarClick) onBarClick(data.record)
+      e.stopPropagation();
+      if (onBarClick) onBarClick(data.record);
     },
-    [data.record, onBarClick]
-  )
-  const reachEdge = usePersistFn((position: 'left' | 'right') => position === 'left' && store.translateX <= 0)
-  // 根据不同的视图确定拖动时的单位，在任何视图下都以一天为单位
-  const grid = useMemo(() => ONE_DAY_MS / store.pxUnitAmp, [store.pxUnitAmp])
+    [data.record, onBarClick],
+  );
+  const reachEdge = usePersistFn(
+    (position: 'left' | 'right') =>
+      position === 'left' && store.translateX <= 0,
+  );
+  // Determine the unit of dragging based on different views, always using one day as the unit in any view
+  const grid = useMemo(() => ONE_DAY_MS / store.pxUnitAmp, [store.pxUnitAmp]);
 
   const moveCalc = -(width / store.pxUnitAmp);
 
   const days = useMemo(() => {
-    const daysWidth = Number(getDateWidth(translateX + width + moveCalc, translateX));
+    const daysWidth = Number(
+      getDateWidth(translateX + width + moveCalc, translateX),
+    );
 
-    return `${daysWidth} ${daysWidth > 1 ? locale.days : locale.day}`
-  }, [translateX, width, moveCalc, translateX])
+    return `${daysWidth} ${daysWidth > 1 ? locale.days : locale.day}`;
+  }, [translateX, width, moveCalc, translateX]);
 
   return (
     <div
-      role='none'
+      role="none"
       className={classNames(prefixClsTaskBar, {
         [`${prefixClsTaskBar}-invalid-date-range`]: invalidDateRange,
         [`${prefixClsTaskBar}-overdue`]: !invalidDateRange,
@@ -153,9 +166,13 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
               </div>
             )} */}
             <DragResize
-              className={classNames(`${prefixClsTaskBar}-resize-handle`, `${prefixClsTaskBar}-resize-handle-left`, {
-                [`${prefixClsTaskBar}-resize-handle-disabled`]: disabled,
-              })}
+              className={classNames(
+                `${prefixClsTaskBar}-resize-handle`,
+                `${prefixClsTaskBar}-resize-handle-left`,
+                {
+                  [`${prefixClsTaskBar}-resize-handle-disabled`]: disabled,
+                },
+              )}
               style={{ left: -14 }}
               onResize={handleResize}
               onResizeEnd={handleLeftResizeEnd}
@@ -165,7 +182,7 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
               }}
               minWidth={30}
               grid={grid}
-              type='left'
+              type="left"
               scroller={store.chartElementRef.current || undefined}
               onAutoScroll={handleAutoScroll}
               reachEdge={reachEdge}
@@ -173,9 +190,13 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
               disabled={disabled}
             />
             <DragResize
-              className={classNames(`${prefixClsTaskBar}-resize-handle`, `${prefixClsTaskBar}-resize-handle-right`, {
-                [`${prefixClsTaskBar}-resize-handle-disabled`]: disabled,
-              })}
+              className={classNames(
+                `${prefixClsTaskBar}-resize-handle`,
+                `${prefixClsTaskBar}-resize-handle-right`,
+                {
+                  [`${prefixClsTaskBar}-resize-handle-disabled`]: disabled,
+                },
+              )}
               style={{ left: width + 1 }}
               onResize={handleResize}
               onResizeEnd={handleRightResizeEnd}
@@ -185,7 +206,7 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
               }}
               minWidth={30}
               grid={grid}
-              type='right'
+              type="right"
               scroller={store.chartElementRef.current || undefined}
               onAutoScroll={handleAutoScroll}
               reachEdge={reachEdge}
@@ -193,7 +214,10 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
               disabled={disabled}
             />
             <div
-              className={classNames(`${prefixClsTaskBar}-resize-bg`, `${prefixClsTaskBar}-resize-bg-compact`)}
+              className={classNames(
+                `${prefixClsTaskBar}-resize-bg`,
+                `${prefixClsTaskBar}-resize-bg-compact`,
+              )}
               style={{ width: width + 30, left: -14 }}
             />
           </>
@@ -208,7 +232,7 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
           }}
           minWidth={30}
           grid={grid}
-          type='move'
+          type="move"
           scroller={store.chartElementRef.current || undefined}
           onAutoScroll={handleAutoScroll}
           reachEdge={reachEdge}
@@ -221,15 +245,23 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
             })
           ) : (
             <svg
-              xmlns='http://www.w3.org/2000/svg'
-              version='1.1'
+              xmlns="http://www.w3.org/2000/svg"
+              version="1.1"
               width={width + 1}
               height={barHeight + 1}
               viewBox={`0 0 ${width + 1} ${barHeight + 1}`}
             >
               <path
-                fill={record.backgroundColor || (getBarColor && getBarColor(record).backgroundColor) || themeColor[0]}
-                stroke={record.borderColor || (getBarColor && getBarColor(record).borderColor) || themeColor[1]}
+                fill={
+                  record.backgroundColor ||
+                  (getBarColor && getBarColor(record).backgroundColor) ||
+                  themeColor[0]
+                }
+                stroke={
+                  record.borderColor ||
+                  (getBarColor && getBarColor(record).borderColor) ||
+                  themeColor[1]
+                }
                 d={`
               M${width - 2},0.5
               l-${width - 5},0
@@ -257,21 +289,32 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
         </DragResize>
       </div>
       {(allowDrag || disabled || alwaysShowTaskBar) && (
-        <div className={`${prefixClsTaskBar}-label`} style={{ left: width / 2 - 10 }}>
+        <div
+          className={`${prefixClsTaskBar}-label`}
+          style={{ left: width / 2 - 10 }}
+        >
           {days}
         </div>
       )}
       {(stepGesture === 'moving' || allowDrag || alwaysShowTaskBar) && (
         <>
-          <div className={`${prefixClsTaskBar}-date-text`} style={{ left: width + 16 }}>
-            {renderRightText ? renderRightText(data) : dateTextFormat(translateX + width + moveCalc)}
+          <div
+            className={`${prefixClsTaskBar}-date-text`}
+            style={{ left: width + 16 }}
+          >
+            {renderRightText
+              ? renderRightText(data)
+              : dateTextFormat(translateX + width + moveCalc)}
           </div>
-          <div className={`${prefixClsTaskBar}-date-text`} style={{ right: width + 16 }}>
+          <div
+            className={`${prefixClsTaskBar}-date-text`}
+            style={{ right: width + 16 }}
+          >
             {renderLeftText ? renderLeftText(data) : dateTextFormat(translateX)}
           </div>
         </>
       )}
     </div>
-  )
-}
-export default observer(TaskBar)
+  );
+};
+export default observer(TaskBar);

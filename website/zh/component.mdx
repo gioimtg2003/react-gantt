@@ -8,13 +8,13 @@ title: 组件示例
 
 只需要配置 `data` `columns` `onUpdate` 即可展示一个最简甘特图
 
-<code src='../demo/basic.tsx' />
+<code src="../demo/basic.tsx" />
 
 ### 新增任务
 
 点击即可新建 `bar`
 
-<code src='../demo/add.tsx' />
+<code src="../demo/add.tsx" />
 
 ### 多级结构
 
@@ -22,7 +22,7 @@ title: 组件示例
 
 可以通过 `onExpand` 获取当前展开的状态
 
-<code src='../demo/child.tsx' />
+<code src="../demo/child.tsx" />
 
 ### 自定义表格列
 
@@ -30,44 +30,44 @@ title: 组件示例
 
 其中，如果每列都配置 `width` 属性。组件内部会计算总宽度。默认初始化表格宽度为总宽度
 
-<code src='../demo/column.tsx' />
+<code src="../demo/column.tsx" />
 
 ### 依赖结构
 
-<code src='../demo/dependence.tsx' />
+<code src="../demo/dependence.tsx" />
 
 ### 自定义渲染
 
-<code src='../demo/render.tsx' />
+<code src="../demo/render.tsx" />
 
 ### 自定义筛选
 
 默认当前日期筛选支持 日、周、月、季、年。支持传入配置，自定义筛选维度
 
-<code src='../demo/filterUnit.tsx' />
+<code src="../demo/filterUnit.tsx" />
 
 ### 高级用法
 
 主要介绍 `alwaysShowTaskBar` `unit` 以及 `innerRef` 上内置方法的使用
 
-<code src='../demo/custom.tsx' />
+<code src="../demo/custom.tsx" />
 
 ## 类型定义
 
 ### `Column` 定义
 
 ```typescript
-export type ColumnAlign = 'center' | 'right' | 'left'
+export type ColumnAlign = 'center' | 'right' | 'left';
 export interface Column<RecordType = DefaultRecordType> {
-  width?: number
-  minWidth?: number
-  maxWidth?: number
-  flex?: number
-  name: string
-  label: string
-  style?: Object
-  render?: (item: Record<RecordType>) => React.ReactNode
-  align?: ColumnAlign
+  width?: number;
+  minWidth?: number;
+  maxWidth?: number;
+  flex?: number;
+  name: string;
+  label: string;
+  style?: Object;
+  render?: (item: Record<RecordType>) => React.ReactNode;
+  align?: ColumnAlign;
 }
 ```
 
@@ -77,23 +77,27 @@ export interface Column<RecordType = DefaultRecordType> {
 
 ```typescript
 export type Record<RecordType = DefaultRecordType> = RecordType & {
-  group?: boolean
-  borderColor?: string
-  backgroundColor?: string
-  collapsed?: boolean
-  children?: Record<RecordType>[]
-  disabled?: boolean
-}
+  group?: string;
+  borderColor?: string;
+  backgroundColor?: string;
+  collapsed?: boolean;
+  children?: Record<RecordType>[];
+  disabled?: boolean;
+};
 ```
 
 ### `Dependence` 定义
 
 ```typescript
-export type DependenceType = 'start_finish' | 'finish_start' | 'start_start' | 'finish_finish'
+export type DependenceType =
+  | 'start_finish'
+  | 'finish_start'
+  | 'start_start'
+  | 'finish_finish';
 export interface Dependence {
-  from: string
-  to: string
-  type: DependenceType
+  from: string;
+  to: string;
+  type: DependenceType;
 }
 ```
 
@@ -103,31 +107,31 @@ export interface Dependence {
 
 ```typescript
 export interface Bar<RecordType = DefaultRecordType> {
-  key: React.Key
-  label: string
-  width: number
-  translateX: number
-  translateY: number
-  stepGesture: string
-  invalidDateRange: boolean
-  dateTextFormat: (startX: number) => string
-  getDateWidth: (startX: number, endX: number) => string
-  task: Item<RecordType>
-  record: Record<RecordType>
-  loading: boolean
-  _group?: boolean
-  _collapsed: boolean
-  _depth: number
-  _index?: number
-  _childrenCount: number
-  _parent?: Item<RecordType>
+  key: React.Key;
+  label: string;
+  width: number;
+  translateX: number;
+  translateY: number;
+  stepGesture: string;
+  invalidDateRange: boolean;
+  dateTextFormat: (startX: number) => string;
+  getDateWidth: (startX: number, endX: number) => string;
+  task: Item<RecordType>;
+  record: Record<RecordType>;
+  loading: boolean;
+  _group?: string;
+  _collapsed: boolean;
+  _depth: number;
+  _index?: number;
+  _childrenCount: number;
+  _parent?: Item<RecordType>;
 }
 ```
 
 ### `Sight` 定义
 
 ```typescript
-export type Sight = 'day' | 'week' | 'month' | 'quarter' | 'halfYear'
+export type Sight = 'day' | 'week' | 'month' | 'quarter' | 'halfYear';
 ```
 
 ## API

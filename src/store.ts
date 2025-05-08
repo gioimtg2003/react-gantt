@@ -4,17 +4,17 @@ import advancedFormat from 'dayjs/plugin/advancedFormat';
 import isBetween from 'dayjs/plugin/isBetween';
 import isLeapYear from 'dayjs/plugin/isLeapYear';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
-import weekOfYear from 'dayjs/plugin/weekOfYear';
 import weekday from 'dayjs/plugin/weekday';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
 import debounce from 'lodash/debounce';
 import find from 'lodash/find';
 import throttle from 'lodash/throttle';
 import { action, computed, observable, runInAction, toJS } from 'mobx';
 import type React from 'react';
 import { createRef } from 'react';
+import { HEADER_HEIGHT, TOP_PADDING } from './constants';
 import type { GanttLocale, GanttProps as GanttProperties } from './Gantt';
 import { defaultLocale } from './Gantt';
-import { HEADER_HEIGHT, TOP_PADDING } from './constants';
 import type { Gantt } from './types';
 import { EGanttSightValues } from './types';
 import { flattenDeep, transverseData } from './utils';
@@ -364,7 +364,7 @@ class GanttStore {
     return height;
   }
 
-  // 1px对应的毫秒数
+  // The number of milliseconds corresponding to 1px
   @computed get pxUnitAmp() {
     return this.sightConfig.value * 1000;
   }
@@ -675,7 +675,6 @@ class GanttStore {
     const height = 8;
     const baseTop = TOP_PADDING + this.rowHeight / 2 - height / 2;
     const topStep = this.rowHeight;
-
     const dateTextFormat = (startX: number) =>
       dayjs(startX * pxUnitAmp).format('YYYY-MM-DD');
 
@@ -686,54 +685,94 @@ class GanttStore {
     };
 
     const flattenData = flattenDeep(data);
-    const barList = flattenData.map((item, index) => {
-      const valid = item.startDate && item.endDate;
-      let startAmp = dayjs(item.startDate || 0)
-        .startOf('day')
-        .valueOf();
-      let endAmp = dayjs(item.endDate || 0)
-        .endOf('day')
-        .valueOf();
+    const groupMap: Record<string, Gantt.Item[][]> = {};
 
-      // 开始结束日期相同默认一天
-      if (Math.abs(endAmp - startAmp) < minStamp) {
-        startAmp = dayjs(item.startDate || 0)
-          .startOf('day')
-          .valueOf();
-        endAmp = dayjs(item.endDate || 0)
-          .endOf('day')
-          .add(minStamp, 'millisecond')
-          .valueOf();
+    for (const task of flattenData) {
+      const group = task.group || 'default';
+      if (!groupMap[group]) groupMap[group] = [];
+
+      let placed = false;
+
+      const lastRow = groupMap[group][groupMap[group].length - 1];
+      if (lastRow) {
+        const isOverlap = lastRow.some((existing) => {
+          const start1 = dayjs(task.startDate).valueOf();
+          const end1 = dayjs(task.endDate).valueOf();
+          const start2 = dayjs(existing.startDate).valueOf();
+          const end2 = dayjs(existing.endDate).valueOf();
+          return !(end1 < start2 || start1 > end2);
+        });
+
+        if (!isOverlap) {
+          lastRow.push(task);
+          placed = true;
+        }
       }
 
-      const width = valid ? (endAmp - startAmp) / pxUnitAmp : 0;
-      const translateX = valid ? startAmp / pxUnitAmp : 0;
-      const translateY = baseTop + index * topStep;
-      const { _parent } = item;
-      const record = { ...item.record, disabled: this.disabled };
-      const bar: Gantt.Bar = {
-        key: item.key,
-        task: item,
-        record,
-        translateX,
-        translateY,
-        width,
-        label: item.content,
-        stepGesture: 'end', // start(开始）、moving(移动)、end(结束)
-        invalidDateRange: !item.endDate || !item.startDate, // 是否为有效时间区间
-        dateTextFormat,
-        getDateWidth,
-        loading: false,
-        _group: item.group,
-        _collapsed: item.collapsed, // 是否折叠
-        _depth: item._depth as number, // 表示子节点深度
-        _index: item._index, // 任务下标位置
-        _parent, // 原任务数据
-        _childrenCount: !item.children ? 0 : item.children.length, // 子任务
-      };
-      item._bar = bar;
-      return bar;
-    });
+      if (!placed) {
+        groupMap[group].push([task]);
+      }
+    }
+
+    console.log('groupMap after handle ', groupMap);
+    const barList: Gantt.Bar[] = [];
+    let rowIndex = 0;
+
+    for (const group in groupMap) {
+      if (Object.prototype.hasOwnProperty.call(groupMap, group)) {
+        const rows = groupMap[group];
+        for (const subRow of rows) {
+          for (const task of subRow) {
+            const valid = task.startDate && task.endDate;
+            let startAmp = dayjs(task.startDate || 0)
+              .startOf('day')
+              .valueOf();
+            let endAmp = dayjs(task.endDate || 0)
+              .endOf('day')
+              .valueOf();
+
+            if (Math.abs(endAmp - startAmp) < minStamp) {
+              endAmp = dayjs(task.endDate || 0)
+                .endOf('day')
+                .add(minStamp, 'millisecond')
+                .valueOf();
+            }
+
+            const width = valid ? (endAmp - startAmp) / pxUnitAmp : 0;
+            const translateX = valid ? startAmp / pxUnitAmp : 0;
+            const translateY = baseTop + rowIndex * topStep;
+            const record = { ...task.record, disabled: this.disabled };
+
+            const bar: Gantt.Bar = {
+              key: task.key,
+              task,
+              record,
+              translateX,
+              translateY,
+              width,
+              label: task.content,
+              stepGesture: 'end',
+              invalidDateRange: !task.endDate || !task.startDate,
+              dateTextFormat,
+              getDateWidth,
+              loading: false,
+              _group: task.group,
+              _collapsed: task.collapsed,
+              _depth: task._depth || 0,
+              _index: task._index || 0,
+              _parent: task._parent,
+              _childrenCount: task.children?.length || 0,
+            };
+
+            task._bar = bar;
+            barList.push(bar);
+          }
+          rowIndex++;
+        }
+      }
+    }
+    console.log('barList after handle ', barList);
+
     // 进行展开扁平
     return observable(barList);
   }
@@ -764,10 +803,10 @@ class GanttStore {
     this.scrollTop = scrollTop;
   }, 100);
 
-  // 虚拟滚动
+  // Virtual scrolling
   @computed get getVisibleRows() {
     const visibleHeight = this.bodyClientHeight;
-    // 多渲染几个，减少空白
+    // Render a few more rows to reduce blank space
     const visibleRowCount = Math.ceil(visibleHeight / this.rowHeight) + 10;
 
     const start = Math.max(Math.ceil(this.scrollTop / this.rowHeight) - 5, 0);
@@ -955,3 +994,47 @@ class GanttStore {
 }
 
 export default GanttStore;
+
+[
+  [
+    {
+      id: 1,
+      name: 'Task 1',
+      group: 'Group A',
+      start_date: '2023-10-01',
+      end_date: '2023-10-05',
+    },
+    {
+      id: 2,
+      name: 'Task 2',
+      group: 'Group A',
+      start_date: '2023-10-03',
+      end_date: '2023-10-07',
+    },
+    {
+      id: 3,
+      name: 'Task 3',
+      group: 'Group A',
+      start_date: '2023-10-05',
+      end_date: '2023-10-10',
+    },
+  ],
+  [
+    {
+      id: 3,
+      name: 'Task 3',
+      group: 'Group C',
+      start_date: '2023-10-05',
+      end_date: '2023-10-10',
+    },
+  ],
+  [
+    {
+      id: 3,
+      name: 'Task 3',
+      group: 'Group B',
+      start_date: '2023-10-05',
+      end_date: '2023-10-10',
+    },
+  ],
+];

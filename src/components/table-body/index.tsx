@@ -3,8 +3,8 @@ import { observer } from 'mobx-react-lite';
 import React, { useCallback, useContext } from 'react';
 import { TOP_PADDING } from '../../constants';
 import Context from '../../context';
-import RowToggler from './RowToggler';
 import './index.less';
+import RowToggler from './RowToggler';
 
 const TableRows = () => {
   const { store, onRow, tableIndent, expandIcon, prefixCls, onExpand } =
@@ -24,14 +24,14 @@ const TableRows = () => {
           marginTop: 30,
         }}
       >
-        暂无数据
+        No Data
       </div>
     );
   }
   return (
     <>
       {barList.slice(start, start + count).map((bar, rowIndex) => {
-        // 父元素如果是其最后一个祖先的子，要隐藏上一层的线
+        // If the parent element is the last child of its ancestor, hide the line of the previous level
         const parent = bar._parent;
         const parentItem = parent?._parent;
         let isLastChild = false;

@@ -7,7 +7,6 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-import './Gantt.less';
 import Chart from './components/chart';
 import Divider from './components/divider';
 import ScrollBar from './components/scroll-bar';
@@ -18,9 +17,10 @@ import TableHeader from './components/table-header';
 import TimeAxis from './components/time-axis';
 import TimeAxisScaleSelect from './components/time-axis-scale-select';
 import TimeIndicator from './components/time-indicator';
-import { BAR_HEIGHT, ROW_HEIGHT, TABLE_INDENT } from './constants';
+import { TABLE_INDENT } from './constants';
 import type { GanttContext } from './context';
 import Context from './context';
+import './Gantt.less';
 import { zhCN } from './locales';
 import GanttStore from './store';
 import type { DefaultRecordType, Gantt } from './types';
@@ -143,7 +143,7 @@ const GanttComponent = <RecordType extends DefaultRecordType>(
     tableCollapseAble = true,
     renderBarThumb,
     scrollTop = true,
-    rowHeight = ROW_HEIGHT,
+    rowHeight = 70,
     columnsWidth,
     innerRef,
     disabled = false,
@@ -217,7 +217,7 @@ const GanttComponent = <RecordType extends DefaultRecordType>(
       tableCollapseAble,
       renderBarThumb,
       scrollTop,
-      barHeight: BAR_HEIGHT,
+      barHeight: 20,
       alwaysShowTaskBar,
       renderLeftText,
       renderRightText,

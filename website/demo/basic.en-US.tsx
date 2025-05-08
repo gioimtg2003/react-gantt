@@ -11,24 +11,39 @@ interface Data {
   name: string;
   startDate: string;
   endDate: string;
+  group: string;
 }
 
-function createData(len: number) {
+function createData(len: number): Data[] {
   const result: Data[] = [];
+  const today = new Date();
+
   for (let i = 0; i < len; i++) {
+    const overlapGroup = i % 5 === 0;
+
+    const offset = overlapGroup ? Math.floor(i / 5) * 2 : i;
+    const start = new Date(today);
+    start.setDate(start.getDate() + offset);
+
+    const end = new Date(start);
+    end.setDate(
+      end.getDate() + (overlapGroup ? 3 : Math.floor(Math.random() * 5) + 1),
+    );
+
     result.push({
       id: i,
-      name: 'Title' + i,
-      startDate: dayjs().subtract(-i, 'day').format('YYYY-MM-DD'),
-      endDate: dayjs().add(i, 'day').format('YYYY-MM-DD'),
+      name: 'Task ' + i,
+      group: 'Group ' + (i % 3),
+      startDate: start.toISOString().slice(0, 10),
+      endDate: end.toISOString().slice(0, 10),
     });
   }
+
   return result;
 }
-
 const App = () => {
   const [data, setData] = useState(createData(20));
-  console.log('data', data);
+  console.log('data >>>> ', data);
   return (
     <div style={{ width: '100%', height: 500 }}>
       <RcGantt<Data>
