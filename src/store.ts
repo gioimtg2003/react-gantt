@@ -17,7 +17,7 @@ import type { GanttLocale, GanttProps as GanttProperties } from './Gantt';
 import { defaultLocale } from './Gantt';
 import type { Gantt } from './types';
 import { EGanttSightValues } from './types';
-import { flattenDeep, transverseData } from './utils';
+import { handleGroupMapData, transverseData } from './utils';
 
 dayjs.extend(weekday);
 dayjs.extend(weekOfYear);
@@ -106,6 +106,8 @@ class GanttStore {
 
   @observable data: Gantt.Item[] = [];
 
+  @observable groupMapData: Record<string, Gantt.Item[][]> = {};
+
   @observable originData: Gantt.Record[] = [];
 
   @observable columns: Gantt.Column[] = [];
@@ -162,6 +164,8 @@ class GanttStore {
 
   rowHeight: number;
 
+  rowKey: string;
+
   onUpdate: GanttProperties['onUpdate'] = () => Promise.resolve(true);
 
   isRestDay = isRestDay;
@@ -175,11 +179,19 @@ class GanttStore {
   }
 
   @action
-  setData(data: Gantt.Record[], startDateKey: string, endDateKey: string) {
+  setData(
+    data: Gantt.Record[],
+    startDateKey: string,
+    endDateKey: string,
+    rowKey: string,
+  ) {
+    const convertData = transverseData(data, startDateKey, endDateKey);
     this.startDateKey = startDateKey;
     this.endDateKey = endDateKey;
+    this.rowKey = rowKey || 'id';
     this.originData = data;
-    this.data = transverseData(data, startDateKey, endDateKey);
+    this.data = convertData;
+    this.groupMapData = handleGroupMapData(convertData);
   }
 
   @action
@@ -256,7 +268,7 @@ class GanttStore {
   @action initWidth() {
     this.tableWidth = this.totalColumnWidth || 250;
     this.viewWidth = this.width - this.tableWidth;
-    // 图表宽度不能小于 200
+    // The chart width cannot be less than 200
     if (this.viewWidth < 200) {
       this.viewWidth = 200;
       this.tableWidth = this.width - this.viewWidth;
@@ -299,7 +311,7 @@ class GanttStore {
   @computed get scrollLeft() {
     const rate = this.viewWidth / this.scrollWidth;
     const currentDate = dayjs(this.translateAmp).toString();
-    // 默认滚动条在中间
+    // Default scrollbar is centered
     const half = (this.viewWidth - this.scrollBarWidth) / 2;
     const viewScrollLeft =
       half +
@@ -356,7 +368,7 @@ class GanttStore {
     return this.getColumnsWidth.reduce((width, item) => width + (item || 0), 0);
   }
 
-  // 内容区滚动区域域高度
+  // Content area scroll region height
   @computed get bodyScrollHeight() {
     let height = this.getBarList.length * this.rowHeight + TOP_PADDING;
     if (height < this.bodyClientHeight) height = this.bodyClientHeight;
@@ -369,7 +381,7 @@ class GanttStore {
     return this.sightConfig.value * 1000;
   }
 
-  /** 当前开始时间毫秒数 */
+  /** Current start time in milliseconds */
   @computed get translateAmp() {
     const { translateX } = this;
     return this.pxUnitAmp * translateX;
@@ -414,11 +426,11 @@ class GanttStore {
       return date.endOf('year');
     };
 
-    // 初始化当前时间
+    // Initialize the current time
     let currentDate = dayjs(translateAmp);
     const dates: Gantt.MajorAmp[] = [];
 
-    // 对可视区域内的时间进行迭代
+    // Iterate over the time within the visible area
     while (currentDate.isBetween(translateAmp - 1, endAmp + 1)) {
       const majorKey = currentDate.format(format);
 
@@ -432,7 +444,7 @@ class GanttStore {
         endDate: end,
       });
 
-      // 获取下次迭代的时间
+      // Get the next iteration time
       start = getStart(currentDate);
       currentDate = getNextDate(start);
     }
@@ -553,7 +565,7 @@ class GanttStore {
       return date.format(format);
     };
 
-    // 初始化当前时间
+    //  init current time
     let currentDate = dayjs(startAmp);
     const dates: Gantt.MinorAmp[] = [];
     while (currentDate.isBetween(startAmp - 1, endAmp + 1)) {
@@ -564,6 +576,10 @@ class GanttStore {
         label: minorKey.split('-').pop() as string,
         startDate: start,
         endDate: end,
+        labelCurrentDay:
+          this.sightConfig.type === 'day'
+            ? currentDate.format('ddd')
+            : undefined,
       });
       currentDate = getNextDate(start);
     }
@@ -627,6 +643,7 @@ class GanttStore {
       const { endDate } = item;
 
       const { label } = item;
+      const { labelCurrentDay } = item;
       const left = startDate.valueOf() / pxUnitAmp;
       const width = (endDate.valueOf() - startDate.valueOf()) / pxUnitAmp;
 
@@ -639,6 +656,7 @@ class GanttStore {
         left,
         width,
         isWeek,
+        labelCurrentDay,
         key: startDate.format('YYYY-MM-DD HH:mm:ss'),
       };
     });
@@ -668,12 +686,13 @@ class GanttStore {
   }
 
   @computed get getBarList(): Gantt.Bar[] {
-    const { pxUnitAmp, data } = this;
-    // 最小宽度
+    const { pxUnitAmp, groupMapData } = this;
+    console.log('groupMapData  ', groupMapData);
+    // Minimum width
     const minStamp = 11 * pxUnitAmp;
     // TODO 去除高度读取
     const height = 8;
-    const baseTop = TOP_PADDING + this.rowHeight / 2 - height / 2;
+    const baseTop = TOP_PADDING + this.rowHeight / 2 - height / 2; // center task bar
     const topStep = this.rowHeight;
     const dateTextFormat = (startX: number) =>
       dayjs(startX * pxUnitAmp).format('YYYY-MM-DD');
@@ -684,43 +703,12 @@ class GanttStore {
       return `${startDate.diff(endDate, 'day') + 1}`;
     };
 
-    const flattenData = flattenDeep(data);
-    const groupMap: Record<string, Gantt.Item[][]> = {};
-
-    for (const task of flattenData) {
-      const group = task.group || 'default';
-      if (!groupMap[group]) groupMap[group] = [];
-
-      let placed = false;
-
-      const lastRow = groupMap[group][groupMap[group].length - 1];
-      if (lastRow) {
-        const isOverlap = lastRow.some((existing) => {
-          const start1 = dayjs(task.startDate).valueOf();
-          const end1 = dayjs(task.endDate).valueOf();
-          const start2 = dayjs(existing.startDate).valueOf();
-          const end2 = dayjs(existing.endDate).valueOf();
-          return !(end1 < start2 || start1 > end2);
-        });
-
-        if (!isOverlap) {
-          lastRow.push(task);
-          placed = true;
-        }
-      }
-
-      if (!placed) {
-        groupMap[group].push([task]);
-      }
-    }
-
-    console.log('groupMap after handle ', groupMap);
     const barList: Gantt.Bar[] = [];
     let rowIndex = 0;
 
-    for (const group in groupMap) {
-      if (Object.prototype.hasOwnProperty.call(groupMap, group)) {
-        const rows = groupMap[group];
+    for (const group in groupMapData) {
+      if (Object.prototype.hasOwnProperty.call(groupMapData, group)) {
+        const rows = groupMapData[group];
         for (const subRow of rows) {
           for (const task of subRow) {
             const valid = task.startDate && task.endDate;
@@ -740,7 +728,7 @@ class GanttStore {
 
             const width = valid ? (endAmp - startAmp) / pxUnitAmp : 0;
             const translateX = valid ? startAmp / pxUnitAmp : 0;
-            const translateY = baseTop + rowIndex * topStep;
+            const translateY = rowIndex * topStep;
             const record = { ...task.record, disabled: this.disabled };
 
             const bar: Gantt.Bar = {
@@ -757,6 +745,7 @@ class GanttStore {
               getDateWidth,
               loading: false,
               _group: task.group,
+              _groupCount: rows.length,
               _collapsed: task.collapsed,
               _depth: task._depth || 0,
               _index: task._index || 0,
@@ -771,7 +760,6 @@ class GanttStore {
         }
       }
     }
-    console.log('barList after handle ', barList);
 
     // 进行展开扁平
     return observable(barList);
@@ -830,7 +818,7 @@ class GanttStore {
     const { top } = this.mainElementRef.current?.getBoundingClientRect() || {
       top: 0,
     };
-    // 内容区高度
+    // Content area height
     const contentHeight = this.getBarList.length * this.rowHeight;
     const offsetY = event.clientY - top + scrollTop;
     if (offsetY - contentHeight > TOP_PADDING) {

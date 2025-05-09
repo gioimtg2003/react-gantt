@@ -22,7 +22,6 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
     onBarClick,
     prefixCls,
     barHeight,
-    alwaysShowTaskBar,
     renderLeftText,
     renderRightText,
   } = useContext(Context);
@@ -31,13 +30,11 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
     translateX,
     translateY,
     invalidDateRange,
-    stepGesture,
     dateTextFormat,
     record,
     loading,
     getDateWidth,
   } = data;
-  console.log('barHeight ', barHeight);
   const { disabled = false } = record || {};
 
   const prefixClsTaskBar = `${prefixCls}-task-bar`;
@@ -118,16 +115,6 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
   );
   // Determine the unit of dragging based on different views, always using one day as the unit in any view
   const grid = useMemo(() => ONE_DAY_MS / store.pxUnitAmp, [store.pxUnitAmp]);
-
-  const moveCalc = -(width / store.pxUnitAmp);
-
-  const days = useMemo(() => {
-    const daysWidth = Number(
-      getDateWidth(translateX + width + moveCalc, translateX),
-    );
-
-    return `${daysWidth} ${daysWidth > 1 ? locale.days : locale.day}`;
-  }, [translateX, width, moveCalc, translateX]);
 
   return (
     <div
@@ -238,65 +225,76 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
           reachEdge={reachEdge}
           onBeforeResize={handleBeforeResize('move')}
         >
-          {renderBar ? (
-            renderBar(data, {
+          {' '}
+          <div
+            style={{
               width: width + 1,
               height: barHeight + 1,
-            })
-          ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              version="1.1"
-              width={width + 1}
-              height={barHeight + 1}
-              viewBox={`0 0 ${width + 1} ${barHeight + 1}`}
-            >
-              <path
-                fill={
-                  record.backgroundColor ||
-                  (getBarColor && getBarColor(record).backgroundColor) ||
-                  themeColor[0]
-                }
-                stroke={
-                  record.borderColor ||
-                  (getBarColor && getBarColor(record).borderColor) ||
-                  themeColor[1]
-                }
-                d={`
-              M${width - 2},0.5
-              l-${width - 5},0
-              c-0.41421,0 -0.78921,0.16789 -1.06066,0.43934
-              c-0.27145,0.27145 -0.43934,0.64645 -0.43934,1.06066
-              l0,5.3
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {renderBar ? (
+              renderBar(data, {
+                width: width - 5,
+                height: barHeight - 10,
+              })
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                version="1.1"
+                width={width - 5}
+                height={barHeight + 1}
+                viewBox={`0 0 ${width + 1} ${barHeight + 1}`}
+              >
+                <path
+                  fill={
+                    record.backgroundColor ||
+                    (getBarColor && getBarColor(record).backgroundColor) ||
+                    themeColor[0]
+                  }
+                  stroke={
+                    record.borderColor ||
+                    (getBarColor && getBarColor(record).borderColor) ||
+                    themeColor[1]
+                  }
+                  d={`
+            M${width - 2},0.5
+            l-${width - 5},0
+            c-0.41421,0 -0.78921,0.16789 -1.06066,0.43934
+            c-0.27145,0.27145 -0.43934,0.64645 -0.43934,1.06066
+            l0,5.3
 
-              c0.03256,0.38255 0.20896,0.724 0.47457,0.97045
-              c0.26763,0.24834 0.62607,0.40013 1.01995,0.40013
-              l4,0
+            c0.03256,0.38255 0.20896,0.724 0.47457,0.97045
+            c0.26763,0.24834 0.62607,0.40013 1.01995,0.40013
+            l4,0
 
-              l${width - 12},0
+            l${width - 12},0
 
-              l4,0
-              c0.41421,0 0.78921,-0.16789 1.06066,-0.43934
-              c0.27145,-0.27145 0.43934,-0.64645 0.43934,-1.06066
+            l4,0
+            c0.41421,0 0.78921,-0.16789 1.06066,-0.43934
+            c0.27145,-0.27145 0.43934,-0.64645 0.43934,-1.06066
 
-              l0,-5.3
-              c-0.03256,-0.38255 -0.20896,-0.724 -0.47457,-0.97045
-              c-0.26763,-0.24834 -0.62607,-0.40013 -1.01995,-0.40013z
-            `}
-              />
-            </svg>
-          )}
+            l0,-5.3
+            c-0.03256,-0.38255 -0.20896,-0.724 -0.47457,-0.97045
+            c-0.26763,-0.24834 -0.62607,-0.40013 -1.01995,-0.40013z
+          `}
+                />
+              </svg>
+            )}
+          </div>
         </DragResize>
       </div>
-      {(allowDrag || disabled || alwaysShowTaskBar) && (
+      {/* {(allowDrag || disabled || alwaysShowTaskBar) && (
         <div
           className={`${prefixClsTaskBar}-label`}
           style={{ left: width / 2 - 10 }}
         >
           {days}
         </div>
-      )}
-      {(stepGesture === 'moving' || allowDrag || alwaysShowTaskBar) && (
+      )} */}
+      {/* {(stepGesture === 'moving' || allowDrag || alwaysShowTaskBar) && (
         <>
           <div
             className={`${prefixClsTaskBar}-date-text`}
@@ -313,7 +311,7 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
             {renderLeftText ? renderLeftText(data) : dateTextFormat(translateX)}
           </div>
         </>
-      )}
+      )} */}
     </div>
   );
 };

@@ -56,8 +56,8 @@ const Dependence: React.FC<DependenceProps> = ({ data }) => {
   const { store, barHeight } = useContext(Context);
   const { from, to, type, color = '#f87872' } = data;
   const barList = store.getBarList;
-  const fromBar = find(barList, (bar) => bar.record.id === from);
-  const toBar = find(barList, (bar) => bar.record.id === to);
+  const fromBar = find(barList, (bar) => bar.record[store.rowKey] === from);
+  const toBar = find(barList, (bar) => bar.record[store.rowKey] === to);
   if (!fromBar || !toBar) return null;
 
   const posY = barHeight / 2;

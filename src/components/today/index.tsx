@@ -5,7 +5,6 @@ import './index.less';
 
 const Today: React.FC = () => {
   const { store, prefixCls } = useContext(Context);
-  console.log('prefixCls ===>', store.pxUnitAmp);
   return (
     <div
       className={`${prefixCls}-today`}

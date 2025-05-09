@@ -5,17 +5,24 @@ import './index.less';
 
 const TableHeader: React.FC = () => {
   const { store, prefixCls } = useContext(Context);
-  const { columns, tableWidth } = store;
+  const { columns, tableWidth, sightConfig } = store;
   const width = tableWidth;
   const columnsWidth = store.getColumnsWidth;
   const prefixClsTableHeader = `${prefixCls}-table-header`;
+
   return (
-    <div className={prefixClsTableHeader} style={{ width, height: 56 }}>
+    <div
+      className={prefixClsTableHeader}
+      style={{ width, ...(sightConfig.type === 'day' && { height: '86px' }) }}
+    >
       <div
         className={`${prefixClsTableHeader}-head`}
-        style={{ width, height: 56 }}
+        style={{ width, height: '100%' }}
       >
-        <div className={`${prefixClsTableHeader}-row`} style={{ height: 56 }}>
+        <div
+          className={`${prefixClsTableHeader}-row`}
+          style={{ height: '100%' }}
+        >
           {columns.map((column, index) => (
             <div
               key={column.name}

@@ -9,15 +9,14 @@ import React, {
 } from 'react';
 import Chart from './components/chart';
 import Divider from './components/divider';
+import Header from './components/header';
 import ScrollBar from './components/scroll-bar';
 import ScrollTop from './components/scroll-top';
 import SelectionIndicator from './components/selection-indicator';
 import TableBody from './components/table-body';
-import TableHeader from './components/table-header';
-import TimeAxis from './components/time-axis';
 import TimeAxisScaleSelect from './components/time-axis-scale-select';
 import TimeIndicator from './components/time-indicator';
-import { TABLE_INDENT } from './constants';
+import { ROW_HEIGHT, TABLE_INDENT } from './constants';
 import type { GanttContext } from './context';
 import Context from './context';
 import './Gantt.less';
@@ -42,6 +41,7 @@ const Body = ({ children }) => {
 };
 export interface GanttProps<RecordType = DefaultRecordType> {
   data: Gantt.Record<RecordType>[];
+  rowKey: string;
   columns: Gantt.Column[];
   dependencies?: Gantt.Dependence[];
   onUpdate: (
@@ -140,10 +140,11 @@ const GanttComponent = <RecordType extends DefaultRecordType>(
     renderInvalidBar,
     renderGroupBar,
     onBarClick,
+    rowKey,
     tableCollapseAble = true,
     renderBarThumb,
     scrollTop = true,
-    rowHeight = 70,
+    rowHeight = ROW_HEIGHT,
     columnsWidth,
     innerRef,
     disabled = false,
@@ -168,7 +169,7 @@ const GanttComponent = <RecordType extends DefaultRecordType>(
     [rowHeight],
   );
   useEffect(() => {
-    store.setData(data, startDateKey, endDateKey);
+    store.setData(data, startDateKey, endDateKey, rowKey);
   }, [data, endDateKey, startDateKey, store]);
 
   useEffect(() => {
@@ -217,7 +218,7 @@ const GanttComponent = <RecordType extends DefaultRecordType>(
       tableCollapseAble,
       renderBarThumb,
       scrollTop,
-      barHeight: 20,
+      barHeight: rowHeight,
       alwaysShowTaskBar,
       renderLeftText,
       renderRightText,
@@ -250,10 +251,7 @@ const GanttComponent = <RecordType extends DefaultRecordType>(
   return (
     <Context.Provider value={ContextValue}>
       <Body>
-        <header>
-          {!hideTable && <TableHeader />}
-          <TimeAxis />
-        </header>
+        <Header hideTable={hideTable} />
         <main ref={store.mainElementRef} onScroll={store.handleScroll}>
           <SelectionIndicator />
           {!hideTable && <TableBody />}

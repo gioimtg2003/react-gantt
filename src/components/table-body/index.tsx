@@ -1,17 +1,15 @@
-import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import React, { useCallback, useContext } from 'react';
 import { TOP_PADDING } from '../../constants';
 import Context from '../../context';
 import './index.less';
-import RowToggler from './RowToggler';
 
 const TableRows = () => {
-  const { store, onRow, tableIndent, expandIcon, prefixCls, onExpand } =
-    useContext(Context);
+  const { store, prefixCls } = useContext(Context);
   const { columns, rowHeight } = store;
   const columnsWidth = store.getColumnsWidth;
   const barList = store.getBarList;
+  const groups = store.groupMapData;
 
   const { count, start } = store.getVisibleRows;
   const prefixClsTableBody = `${prefixCls}-table-body`;
@@ -30,28 +28,28 @@ const TableRows = () => {
   }
   return (
     <>
-      {barList.slice(start, start + count).map((bar, rowIndex) => {
+      {Object.entries(groups).map(([group, bars], rowIndex) => {
         // If the parent element is the last child of its ancestor, hide the line of the previous level
-        const parent = bar._parent;
-        const parentItem = parent?._parent;
-        let isLastChild = false;
-        if (
-          parentItem?.children &&
-          parentItem.children[parentItem.children.length - 1] === bar._parent
-        )
-          isLastChild = true;
+        // const parent = bar._parent;
+        // const parentItem = parent?._parent;
+        // let isLastChild = false;
+        // if (
+        //   parentItem?.children &&
+        //   parentItem.children[parentItem.children.length - 1] === bar._parent
+        // )
+        //   isLastChild = true;
 
         return (
           <div
-            key={bar.key}
+            key={group}
             role="none"
             className={`${prefixClsTableBody}-row`}
             style={{
-              height: rowHeight,
-              top: (rowIndex + start) * rowHeight + TOP_PADDING,
-            }}
-            onClick={() => {
-              onRow?.onClick(bar.record);
+              height: rowHeight * (bars?.length || 1),
+              top:
+                (rowIndex + start) * (rowHeight * (bars?.length || 1)) +
+                TOP_PADDING,
+              borderBottom: '1px solid #f0f0f0',
             }}
           >
             {columns.map((column, index) => (
@@ -63,12 +61,10 @@ const TableRows = () => {
                   minWidth: column.minWidth,
                   maxWidth: column.maxWidth,
                   textAlign: column.align ? column.align : 'left',
-                  paddingLeft:
-                    index === 0 ? tableIndent * (bar._depth + 1) + 10 : 12,
                   ...column.style,
                 }}
               >
-                {index === 0 &&
+                {/* {index === 0 &&
                   new Array(bar._depth).fill(0).map((_, i) => (
                     <div
                       key={i}
@@ -92,7 +88,7 @@ const TableRows = () => {
                   <div
                     style={{
                       position: 'absolute',
-                      left: tableIndent * bar._depth + 15,
+                      left: tableIndent * 3 + 15,
                       background: 'white',
                       zIndex: 9,
                       transform: 'translateX(-52%)',
@@ -124,11 +120,17 @@ const TableRows = () => {
                       />
                     )}
                   </div>
-                )}
-                <span className={`${prefixClsTableBody}-ellipsis`}>
-                  {column.render
-                    ? column.render(bar.record)
-                    : bar.record[column.name]}
+                )} */}
+                <span
+                  className={`${prefixClsTableBody}-ellipsis`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: rowHeight,
+                    paddingLeft: index === 0 ? 0 : 10,
+                  }}
+                >
+                  {column.render ? column.render(group) : group}
                 </span>
               </div>
             ))}

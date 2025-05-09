@@ -4,7 +4,7 @@ import type React from 'react';
 export type DefaultRecordType = Record<string, any>;
 
 export enum EGanttSightValues {
-  day = 2880,
+  day = 2000,
   week = 3600,
   month = 14400,
   quarter = 86400,
@@ -28,9 +28,11 @@ export namespace Gantt {
     label: string;
     isWeek: boolean;
     key: string;
+    labelCurrentDay?: string;
   }
   export interface MinorAmp {
     label: string;
+    labelCurrentDay?: string;
     startDate: Dayjs;
     endDate: Dayjs;
   }
@@ -56,6 +58,7 @@ export namespace Gantt {
     record: Record<RecordType>;
     loading: boolean;
     _group?: string;
+    _groupCount?: number;
     _collapsed: boolean;
     _depth: number;
     _index?: number;
@@ -95,7 +98,7 @@ export namespace Gantt {
     name: string;
     label: string;
     style?: object;
-    render?: (item: Record<RecordType>) => React.ReactNode;
+    render?: (item: any) => React.ReactNode;
     align?: ColumnAlign;
   }
   export type DependenceType =

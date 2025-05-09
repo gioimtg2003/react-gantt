@@ -43,7 +43,6 @@ function createData(len: number): Data[] {
 }
 const App = () => {
   const [data, setData] = useState(createData(20));
-  console.log('data >>>> ', data);
   return (
     <div style={{ width: '100%', height: 500 }}>
       <RcGantt<Data>
@@ -53,9 +52,75 @@ const App = () => {
             name: 'name',
             label: 'Custom Title',
             width: 100,
+            align: 'center',
           },
         ]}
         locale={enUS}
+        rowHeight={80}
+        renderBar={(record, { width, height }) => {
+          return (
+            <div
+              style={{
+                width: width,
+                height,
+                backgroundColor: '#e6f0ff',
+                borderRadius: '8px',
+                padding: '16px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                fontFamily: 'Arial, sans-serif',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    color: '#3366cc',
+                    fontWeight: 500,
+                    fontSize: '16px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  Title-bar value
+                </div>
+                <button
+                  type="button"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '18px',
+                    color: '#666',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  ⋮
+                </button>
+              </div>
+              <div
+                style={{
+                  marginTop: '8px',
+                  color: '#333',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                1st description value
+              </div>
+            </div>
+          );
+        }}
         onUpdate={async (row, startDate, endDate) => {
           console.log('update', row, startDate, endDate);
           setData((prev) => {
@@ -74,5 +139,122 @@ const App = () => {
     </div>
   );
 };
-
+const a = {
+  rowKey: '_id2',
+  headerTitle: 'Candidates',
+  timeline: {
+    start_date: 'earliest_start_date_1190',
+    end_date: 'end_date_1191',
+  },
+  renders: [
+    {
+      title: 'Group1',
+      dataIndex: 'candidate_1187',
+      meta_key: 'groups',
+    },
+    {
+      title: 'Group2',
+      dataIndex: 'flagged_1195',
+      meta_key: 'groups',
+    },
+    {
+      key: 'candidate_1187',
+      meta_key: 'description',
+      title: 'Candidate',
+      dataIndex: 'candidate_1187',
+    },
+    {
+      key: 'candidate_1187',
+      meta_key: 'title-bar',
+      title: 'Gender',
+      display: '[$gender_1148]',
+      component: 'tags',
+      mapping_component: [
+        {
+          value: '1',
+          color: 'magenta',
+          case: 'capital',
+        },
+        {
+          value: '0',
+          color: 'geekblue',
+          case: 'capital',
+        },
+        {
+          value: '2',
+          color: 'purple',
+          case: 'capital',
+        },
+      ],
+      dataIndex: 'candidate_1187',
+    },
+    {
+      key: 'candidate_1187',
+      meta_key: 'description',
+      title: "Candidate's Location",
+      display: '[$location_1151]',
+      dataIndex: 'candidate_1187',
+    },
+    {
+      key: 'flagged',
+      meta_key: 'description',
+      title: 'Flagged',
+      dataIndex: 'flagged_1195',
+    },
+    {
+      key: 'action',
+      title: 'Actions',
+      meta_key: 'actions',
+      actions: [
+        {
+          icon: {
+            name: 'EyeTwoTone',
+          },
+          type: 'text',
+          tooltip: 'View Candidate',
+          href: '/workplaces/{workplace_id}/codes/156',
+        },
+        {
+          icon: {
+            name: 'SwapOutlined',
+            color: '#1677ff',
+          },
+          type: 'text',
+          tooltip: 'Status Quick Update',
+          onClick: {
+            event_ui: ['open_modal:Modal|PJRLV|'],
+          },
+        },
+        {
+          icon: {
+            name: 'MoreOutlined',
+          },
+          type: 'text',
+          tooltip: 'More',
+          groups: [
+            {
+              icon: {
+                name: 'EditTwoTone',
+              },
+              text: 'Edit Candidate (Full)',
+              type: 'text',
+              onClick: {
+                event_ui: ['open_drawer:Drawer|KxIEu|'],
+              },
+            },
+            {
+              icon: {
+                name: 'DeleteOutlined',
+              },
+              danger: true,
+              type: 'text',
+              tooltip: 'Delete',
+              action_sys: ['action_515'],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
 export default App;
