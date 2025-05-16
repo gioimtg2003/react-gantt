@@ -1,24 +1,31 @@
 /* eslint-disable no-underscore-dangle */
+import dayjs from 'dayjs';
 import { observer } from 'mobx-react-lite';
 import React, { useContext } from 'react';
 import Context from '../../context';
-import InvalidTaskBar from '../invalid-task-bar';
 import TaskBar from '../task-bar';
 
 const BarList: React.FC = () => {
   const { store } = useContext(Context);
+  const { viewWidth, pxUnitAmp, translateAmp } = store;
   const barList = store.getBarList;
-  const { count, start } = store.getVisibleRows;
+
+  const rangeStart = translateAmp - 1;
+  const rangeEnd = translateAmp + pxUnitAmp * viewWidth + 1;
+
   return (
     <>
-      {barList.slice(start, start + count).map((bar) => {
-        // if (bar._group) return <GroupBar key={bar.key} data={bar} />;
+      {barList.map((bar) => {
+        const currentStartDate = dayjs(bar?.task?.startDate);
+        const currentEndDate = dayjs(bar?.task?.endDate);
+        const isOverlap =
+          currentEndDate.isAfter(rangeStart) &&
+          currentStartDate.isBefore(rangeEnd);
 
-        return bar.invalidDateRange ? (
-          <InvalidTaskBar key={bar.key} data={bar} />
-        ) : (
-          <TaskBar key={bar.key} data={bar} />
-        );
+        if (isOverlap) {
+          return <TaskBar key={bar.key} data={bar} />;
+        }
+        return null;
       })}
     </>
   );
